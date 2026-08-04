@@ -1,0 +1,70 @@
+{
+    "name": "tbtop/image-gallery",
+    "description": "Spatie media-library facade for tbtop/admin - collection-scoped image gallery field",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Max Boeko",
+            "email": "12crya34@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../tbtop/packages/php",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "illuminate/contracts": "^11.0||^12.0||^13.0",
+        "spatie/laravel-medialibrary": "^11.0",
+        "spatie/laravel-package-tools": "^1.16",
+        "tbtop/admin": "*"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.14",
+        "nunomaduro/collision": "^8.8",
+        "orchestra/testbench": "^11.0.0||^10.0.0||^9.0.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tbtop\\ImageGallery\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tbtop\\ImageGallery\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse",
+        "test": "vendor/bin/pest",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Tbtop\\ImageGallery\\ImageGalleryServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
