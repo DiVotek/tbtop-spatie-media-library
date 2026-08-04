@@ -4,6 +4,7 @@ namespace Tbtop\ImageGallery\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use RuntimeException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Tbtop\Admin\Uploads\ImageEncoder;
@@ -23,6 +24,13 @@ final class MediaGalleryStorer
         string $collection,
         ?array $conversion = null,
     ): Media {
+        // An unsaved model has no key, and spatie derives the storage path from
+        // it — attaching here yields a media row whose path generator later
+        // fails on null. Refuse up front instead of writing that record.
+        if (! $model->exists) {
+            throw new RuntimeException('Cannot attach media to an unsaved model.');
+        }
+
         $conversion ??= (array) config('tbtop-image-gallery.conversion');
         $originalName = pathinfo((string) $file->getClientOriginalName(), PATHINFO_FILENAME);
 

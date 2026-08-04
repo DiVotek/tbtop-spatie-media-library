@@ -15,6 +15,10 @@ use Tbtop\ImageGallery\Support\MediaGalleryOptions;
  */
 final class ImageGalleryField extends Select
 {
+    private ?Model $target = null;
+
+    private string $collection = 'default';
+
     protected function kind(): string
     {
         return 'imageGallery';
@@ -26,8 +30,25 @@ final class ImageGalleryField extends Select
      */
     public function forCollection(Model&HasMedia $model, string $collection): static
     {
+        $this->target = $model;
+        $this->collection = $collection;
+
         return $this->query(
             fn (array $deps, string $search): array => MediaGalleryOptions::search($model, $collection, $search),
         );
+    }
+
+    /**
+     * The bound record. Upload controllers read it off the resolved page rather
+     * than trusting a model reference from the client.
+     */
+    public function target(): (Model&HasMedia)|null
+    {
+        return $this->target instanceof HasMedia ? $this->target : null;
+    }
+
+    public function collection(): string
+    {
+        return $this->collection;
     }
 }

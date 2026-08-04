@@ -13,7 +13,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 final class MediaGalleryOptions
 {
-    /** @return list<array{value: string, label: string, url: string, mime: string}> */
+    /** @return list<array{value: string, label: string, display: array{image: string, subtitle: string}}> */
     public static function search(Model&HasMedia $model, string $collection, string $search): array
     {
         $needle = mb_strtolower($search);
@@ -22,12 +22,38 @@ final class MediaGalleryOptions
             ->filter(fn (Media $media): bool => $needle === '' || str_contains(mb_strtolower($media->name), $needle))
             ->take((int) config('tbtop-image-gallery.per_page'))
             ->values()
-            ->map(fn (Media $media): array => [
-                'value' => (string) $media->id,
-                'label' => $media->name,
-                'url' => $media->getUrl(),
-                'mime' => $media->mime_type ?? '',
-            ])
+            ->map(fn (Media $media): array => self::toOption($media))
+            ->all();
+    }
+
+    /**
+     * `display` is core's allowlisted channel for option imagery — arbitrary
+     * row keys are stripped, since a query() row is often a whole model.
+     *
+     * @return array{value: string, label: string, display: array{image: string, subtitle: string}}
+     */
+    public static function toOption(Media $media): array
+    {
+        return [
+            'value' => (string) $media->getKey(),
+            'label' => $media->name,
+            'display' => [
+                'image' => $media->getUrl(),
+                'subtitle' => $media->mime_type ?? '',
+            ],
+        ];
+    }
+
+    /**
+     * Current ids in a collection, shaped for a form record().
+     *
+     * @return list<string>
+     */
+    public static function ids(Model&HasMedia $model, string $collection): array
+    {
+        return $model->getMedia($collection)
+            ->map(fn (Media $media): string => (string) $media->getKey())
+            ->values()
             ->all();
     }
 }
