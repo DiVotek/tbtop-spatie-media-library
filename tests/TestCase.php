@@ -24,4 +24,11 @@ class TestCase extends Orchestra
         config()->set('database.default', 'testing');
         config()->set('filesystems.disks.public.driver', 'local');
     }
+
+    // spatie/laravel-package-tools only auto-loads a package migration when the
+    // consuming app opts in via runsMigrations(); tests load it explicitly instead.
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/migrations');
+    }
 }
