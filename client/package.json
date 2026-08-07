@@ -1,0 +1,47 @@
+{
+	"name": "@tbtop/image-gallery",
+	"version": "0.1.0",
+	"description": "Client half of tbtop/image-gallery: an image picker bound to a record's spatie media collection.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/DiVotek/tbtop-image-gallery.git",
+		"directory": "client"
+	},
+	"type": "module",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist",
+		"!dist/**/*.test.*"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsup",
+		"prepublishOnly": "bun run build",
+		"typecheck": "tsc --noEmit"
+	},
+	"peerDependencies": {
+		"@tbtop/inertia-admin": "^0.3.0",
+		"lucide-react": ">=0.400.0",
+		"react": "^19",
+		"react-dom": "^19"
+	},
+	"devDependencies": {
+		"@tbtop/inertia-admin": "file:../../tbtop/packages/client",
+		"@types/react": "^19",
+		"lucide-react": "^0.544.0",
+		"react": "^19",
+		"tsup": "^8.5.0",
+		"typescript": "^5.9.0"
+	}
+}

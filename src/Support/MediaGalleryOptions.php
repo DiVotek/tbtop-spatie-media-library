@@ -13,7 +13,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 final class MediaGalleryOptions
 {
-    /** @return list<array{value: string, label: string, display: array{image: string, subtitle: string}}> */
+    /** @return list<array{value: string, label: string, display: array{image: string, subtitle: string, mime: string}}> */
     public static function search(Model&HasMedia $model, string $collection, string $search): array
     {
         $needle = mb_strtolower($search);
@@ -29,17 +29,21 @@ final class MediaGalleryOptions
     /**
      * `display` is core's allowlisted channel for option imagery — arbitrary
      * row keys are stripped, since a query() row is often a whole model.
+     * `mime` rides along so the tile can pick an icon for non-images.
      *
-     * @return array{value: string, label: string, display: array{image: string, subtitle: string}}
+     * @return array{value: string, label: string, display: array{image: string, subtitle: string, mime: string}}
      */
     public static function toOption(Media $media): array
     {
+        $mime = $media->mime_type ?? '';
+
         return [
             'value' => (string) $media->getKey(),
             'label' => $media->name,
             'display' => [
                 'image' => $media->getUrl(),
-                'subtitle' => $media->mime_type ?? '',
+                'subtitle' => $mime,
+                'mime' => $mime,
             ],
         ];
     }

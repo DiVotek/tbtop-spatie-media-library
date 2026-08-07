@@ -7,6 +7,7 @@ use Illuminate\Http\UploadedFile;
 use RuntimeException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Tbtop\Admin\Media\SvgSanitizer;
 use Tbtop\Admin\Uploads\ImageEncoder;
 
 /**
@@ -40,7 +41,13 @@ final class MediaGalleryStorer
 
         // addMedia() consumes (deletes) $path once copied to the media disk by
         // default, so the encoded temp file needs no separate cleanup here.
-        return $model->addMedia($path)->usingName($originalName)->usingFileName($fileName)->toMediaCollection($collection);
+        $media = $model->addMedia($path)->usingName($originalName)->usingFileName($fileName)->toMediaCollection($collection);
+
+        // Sniffed from the stored bytes, so a scriptful svg is stripped even
+        // when the conversion above left the original untouched.
+        SvgSanitizer::sanitizeStored($media->disk, $media->getPathRelativeToRoot(), $fileName);
+
+        return $media;
     }
 
     /**
