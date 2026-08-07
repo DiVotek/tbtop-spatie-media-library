@@ -1,0 +1,95 @@
+# Both manifests resolve tbtop/admin through a relative path to the core repo,
+# so every job checks core out as a sibling directory. Once core ships the
+# release this package needs, these steps can go and the manifests can point at
+# published versions instead.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CORE_REF: main
+
+jobs:
+  php:
+    name: PHP (pest + phpstan + pint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: package
+
+      - uses: actions/checkout@v4
+        with:
+          repository: DiVotek/tbtop
+          ref: ${{ env.CORE_REF }}
+          token: ${{ secrets.CORE_REPO_TOKEN || github.token }}
+          path: tbtop
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+
+      - name: Install
+        working-directory: package
+        run: composer install --no-interaction --prefer-dist
+
+      - name: PHPStan
+        working-directory: package
+        run: composer run analyse
+
+      - name: Pest
+        working-directory: package
+        run: vendor/bin/pest
+
+      - name: Pint
+        working-directory: package
+        run: vendor/bin/pint --test
+
+  client:
+    name: Client (tsc + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: package
+
+      - uses: actions/checkout@v4
+        with:
+          repository: DiVotek/tbtop
+          ref: ${{ env.CORE_REF }}
+          token: ${{ secrets.CORE_REPO_TOKEN || github.token }}
+          path: tbtop
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+
+      # The client imports core's built types, not its sources.
+      - name: Build core client
+        working-directory: tbtop/packages/client
+        run: bun install --frozen-lockfile && bun run build
+
+      - name: Install
+        working-directory: package/client
+        run: bun install
+
+      - name: Typecheck
+        working-directory: package/client
+        run: bun run typecheck
+
+      - name: Build
+        working-directory: package/client
+        run: bun run build
+
+      # A stale dist ships broken code to consumers, who install the checkout
+      # as-is: fail the build rather than let the two drift.
+      - name: Committed dist is up to date
+        working-directory: package
+        run: git diff --exit-code -- client/dist
