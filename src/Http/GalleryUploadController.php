@@ -1,6 +1,6 @@
 <?php
 
-namespace Tbtop\ImageGallery\Http;
+namespace Tbtop\SpatieMediaLibrary\Http;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,9 +13,9 @@ use Tbtop\Admin\Media\MediaUploadLimit;
 use Tbtop\Admin\Media\MimePolicy;
 use Tbtop\Admin\Media\UrlFetcher;
 use Tbtop\Admin\Media\UrlFetchException;
-use Tbtop\ImageGallery\Fields\ImageGalleryField;
-use Tbtop\ImageGallery\Support\MediaGalleryOptions;
-use Tbtop\ImageGallery\Support\MediaGalleryStorer;
+use Tbtop\SpatieMediaLibrary\Fields\MediaLibraryField;
+use Tbtop\SpatieMediaLibrary\Support\MediaGalleryOptions;
+use Tbtop\SpatieMediaLibrary\Support\MediaGalleryStorer;
 
 /**
  * POST {page-path}/gallery-upload/{tbtopField}
@@ -59,12 +59,12 @@ final class GalleryUploadController
         return response()->json(['option' => MediaGalleryOptions::toOption($media)], 201);
     }
 
-    private function resolveField(Request $request): ImageGalleryField
+    private function resolveField(Request $request): MediaLibraryField
     {
         $fieldName = (string) $request->route('tbtopField');
         $field = ResolvedPage::fromRequest($request)->s->findQueryableSelect($fieldName);
 
-        if (! $field instanceof ImageGalleryField) {
+        if (! $field instanceof MediaLibraryField) {
             throw new NotFoundHttpException("Gallery field \"{$fieldName}\" is not defined on this page.");
         }
 
@@ -78,10 +78,10 @@ final class GalleryUploadController
     private function readFile(Request $request): array
     {
         /** @var list<string> $accept */
-        $accept = (array) config('tbtop-image-gallery.accept', ['image/*']);
+        $accept = (array) config('tbtop-spatie-media-library.accept', ['image/*']);
 
         if ($request->filled('url')) {
-            if (config('tbtop-image-gallery.url_import.enabled') !== true) {
+            if (config('tbtop-spatie-media-library.url_import.enabled') !== true) {
                 throw new RuntimeException('URL import is disabled.');
             }
             $request->validate(['url' => 'required|url']);

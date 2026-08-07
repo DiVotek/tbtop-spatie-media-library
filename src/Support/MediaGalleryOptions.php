@@ -1,6 +1,6 @@
 <?php
 
-namespace Tbtop\ImageGallery\Support;
+namespace Tbtop\SpatieMediaLibrary\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
@@ -20,7 +20,7 @@ final class MediaGalleryOptions
 
         return $model->getMedia($collection)
             ->filter(fn (Media $media): bool => $needle === '' || str_contains(mb_strtolower($media->name), $needle))
-            ->take((int) config('tbtop-image-gallery.per_page'))
+            ->take((int) config('tbtop-spatie-media-library.per_page'))
             ->values()
             ->map(fn (Media $media): array => self::toOption($media))
             ->all();

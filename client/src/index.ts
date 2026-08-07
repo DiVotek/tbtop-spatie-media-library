@@ -7,11 +7,11 @@ export type { GalleryOption, GalleryOptions, GalleryPick, GalleryValue } from ".
 export const GALLERY_KIND = "imageGallery";
 
 /**
- * Registers the client half. Options come from ImageGalleryField, and both
+ * Registers the client half. Options come from MediaLibraryField, and both
  * endpoints are derived from the page basePath here — the PHP side never
  * serializes a URL, so a page only declares forCollection().
  */
-export function registerImageGalleryField(): void {
+export function registerMediaLibraryField(): void {
 	defineFieldClient(GALLERY_KIND, {
 		form: GalleryForm,
 		cell: GalleryCell,

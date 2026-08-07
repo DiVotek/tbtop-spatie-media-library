@@ -1,11 +1,11 @@
 {
-	"name": "@tbtop/image-gallery",
+	"name": "@tbtop/spatie-media-library",
 	"version": "0.1.0",
-	"description": "Client half of tbtop/image-gallery: an image picker bound to a record's spatie media collection.",
+	"description": "Client half of tbtop/spatie-media-library: an image picker bound to a record's spatie media collection.",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/DiVotek/tbtop-image-gallery.git",
+		"url": "git+https://github.com/DiVotek/tbtop-spatie-media-library.git",
 		"directory": "client"
 	},
 	"type": "module",

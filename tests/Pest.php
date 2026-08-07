@@ -1,5 +1,5 @@
 <?php
 
-use Tbtop\ImageGallery\Tests\TestCase;
+use Tbtop\SpatieMediaLibrary\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);

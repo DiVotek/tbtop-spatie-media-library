@@ -1,6 +1,6 @@
 <?php
 
-namespace Tbtop\ImageGallery\Support;
+namespace Tbtop\SpatieMediaLibrary\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
@@ -32,7 +32,7 @@ final class MediaGalleryStorer
             throw new RuntimeException('Cannot attach media to an unsaved model.');
         }
 
-        $conversion ??= (array) config('tbtop-image-gallery.conversion');
+        $conversion ??= (array) config('tbtop-spatie-media-library.conversion');
         $originalName = pathinfo((string) $file->getClientOriginalName(), PATHINFO_FILENAME);
 
         $converted = self::encode($file, $conversion, $originalName);

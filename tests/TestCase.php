@@ -1,11 +1,11 @@
 <?php
 
-namespace Tbtop\ImageGallery\Tests;
+namespace Tbtop\SpatieMediaLibrary\Tests;
 
 use Orchestra\Testbench\TestCase as Orchestra;
 use Spatie\MediaLibrary\MediaLibraryServiceProvider;
 use Tbtop\Admin\AdminServiceProvider;
-use Tbtop\ImageGallery\ImageGalleryServiceProvider;
+use Tbtop\SpatieMediaLibrary\SpatieMediaLibraryServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -15,7 +15,7 @@ class TestCase extends Orchestra
         return [
             AdminServiceProvider::class,
             MediaLibraryServiceProvider::class,
-            ImageGalleryServiceProvider::class,
+            SpatieMediaLibraryServiceProvider::class,
         ];
     }
 

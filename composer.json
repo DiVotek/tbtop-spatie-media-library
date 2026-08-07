@@ -1,5 +1,5 @@
 {
-    "name": "tbtop/image-gallery",
+    "name": "tbtop/spatie-media-library",
     "description": "Spatie media-library facade for tbtop/admin - collection-scoped image gallery field",
     "license": "MIT",
     "authors": [
@@ -38,12 +38,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Tbtop\\ImageGallery\\": "src/"
+            "Tbtop\\SpatieMediaLibrary\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Tbtop\\ImageGallery\\Tests\\": "tests/"
+            "Tbtop\\SpatieMediaLibrary\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -61,7 +61,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Tbtop\\ImageGallery\\ImageGalleryServiceProvider"
+                "Tbtop\\SpatieMediaLibrary\\SpatieMediaLibraryServiceProvider"
             ]
         }
     },
