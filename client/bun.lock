@@ -12,12 +12,6 @@
         "tsup": "^8.5.0",
         "typescript": "^5.9.0",
       },
-      "peerDependencies": {
-        "@tbtop/inertia-admin": "^0.3.0",
-        "lucide-react": ">=0.400.0",
-        "react": "^19",
-        "react-dom": "^19",
-      },
     },
   },
   "packages": {
