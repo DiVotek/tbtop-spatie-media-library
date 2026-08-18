@@ -1,6 +1,6 @@
 <?php
 
-namespace Tbtop\ImageGallery\Tests\Fixtures;
+namespace Tbtop\SpatieMediaLibrary\Tests\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;

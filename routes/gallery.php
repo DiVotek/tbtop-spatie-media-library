@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Tbtop\Admin\Http\SetAdminLocale;
 use Tbtop\Admin\Http\SetCurrentPanel;
 use Tbtop\Admin\Panels\PanelRegistry;
-use Tbtop\ImageGallery\Http\GalleryUploadController;
+use Tbtop\SpatieMediaLibrary\Http\GalleryUploadController;
 
 /**
  * Mirrors core's per-page endpoint registration: one upload route per page,

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tbtop\ImageGallery\Support;
+namespace Tbtop\SpatieMediaLibrary\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
@@ -13,14 +13,14 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
  */
 final class MediaGalleryOptions
 {
-    /** @return list<array{value: string, label: string, display: array{image: string, subtitle: string}}> */
+    /** @return list<array{value: string, label: string, display: array{image: string, subtitle: string, mime: string}}> */
     public static function search(Model&HasMedia $model, string $collection, string $search): array
     {
         $needle = mb_strtolower($search);
 
         return $model->getMedia($collection)
             ->filter(fn (Media $media): bool => $needle === '' || str_contains(mb_strtolower($media->name), $needle))
-            ->take((int) config('tbtop-image-gallery.per_page'))
+            ->take((int) config('tbtop-spatie-media-library.per_page'))
             ->values()
             ->map(fn (Media $media): array => self::toOption($media))
             ->all();
@@ -29,17 +29,21 @@ final class MediaGalleryOptions
     /**
      * `display` is core's allowlisted channel for option imagery — arbitrary
      * row keys are stripped, since a query() row is often a whole model.
+     * `mime` rides along so the tile can pick an icon for non-images.
      *
-     * @return array{value: string, label: string, display: array{image: string, subtitle: string}}
+     * @return array{value: string, label: string, display: array{image: string, subtitle: string, mime: string}}
      */
     public static function toOption(Media $media): array
     {
+        $mime = $media->mime_type ?? '';
+
         return [
             'value' => (string) $media->getKey(),
             'label' => $media->name,
             'display' => [
                 'image' => $media->getUrl(),
-                'subtitle' => $media->mime_type ?? '',
+                'subtitle' => $mime,
+                'mime' => $mime,
             ],
         ];
     }

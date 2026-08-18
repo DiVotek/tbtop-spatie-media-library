@@ -5,9 +5,9 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Tbtop\Admin\Dsl\S;
-use Tbtop\ImageGallery\Support\MediaGalleryOptions;
-use Tbtop\ImageGallery\Support\MediaGalleryStorer;
-use Tbtop\ImageGallery\Tests\Fixtures\Product;
+use Tbtop\SpatieMediaLibrary\Support\MediaGalleryOptions;
+use Tbtop\SpatieMediaLibrary\Support\MediaGalleryStorer;
+use Tbtop\SpatieMediaLibrary\Tests\Fixtures\Product;
 
 uses(RefreshDatabase::class);
 

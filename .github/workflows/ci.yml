@@ -1,0 +1,57 @@
+# Both halves resolve their tbtop dependency from a registry — composer from
+# Packagist, npm from npmjs — so no job needs a checkout of the core repo.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  php:
+    name: PHP (pest + phpstan + pint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+
+      - name: Install
+        run: composer install --no-interaction --prefer-dist
+
+      - name: PHPStan
+        run: composer run analyse
+
+      - name: Pest
+        run: vendor/bin/pest
+
+      - name: Pint
+        run: vendor/bin/pint --test
+
+  client:
+    name: Client (tsc + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Build
+        run: bun run build

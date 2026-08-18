@@ -1,6 +1,6 @@
 # Brief — spatie gallery field (spike)
 
-Implement `tbtop/image-gallery`: a **PHP-only** facade over
+Implement `tbtop/spatie-media-library`: a **PHP-only** facade over
 `spatie/laravel-medialibrary` that gives a tbtop admin form an image field backed
 by a model's media collection. The scaffold, the gates and the core-side seams
 are already in place — this brief is the implementation scope on top of them.
@@ -49,7 +49,7 @@ So the field must:
 - extend `Select`, override `kind()` to return `imageGallery`;
 - register a `query(fn (array $deps, string $search): array)` closure that reads
   the model's spatie collection, applies `$search` to the file name, and caps the
-  page size at `config('tbtop-image-gallery.per_page')`;
+  page size at `config('tbtop-spatie-media-library.per_page')`;
 - return rows shaped `['value' => (string) $media->id, 'label' => $media->name,
   'url' => $media->getUrl(), 'mime' => $media->mime_type]` — `value` and `label`
   are required by core, the rest rides along thanks to core modification (2).
@@ -64,7 +64,7 @@ Uploads reuse core rather than reimplementing storage:
   `$model->addMedia(...)->toMediaCollection($collection)`.
 - The collection name is whatever the consumer passed; never fall back to
   `default` silently.
-- Conversion defaults come from `config('tbtop-image-gallery.conversion')` and
+- Conversion defaults come from `config('tbtop-spatie-media-library.conversion')` and
   a per-field override wins over the config.
 
 ## Tests (exactly these four, Pest)

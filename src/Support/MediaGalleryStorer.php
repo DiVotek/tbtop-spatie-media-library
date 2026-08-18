@@ -1,12 +1,13 @@
 <?php
 
-namespace Tbtop\ImageGallery\Support;
+namespace Tbtop\SpatieMediaLibrary\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use RuntimeException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Tbtop\Admin\Media\SvgSanitizer;
 use Tbtop\Admin\Uploads\ImageEncoder;
 
 /**
@@ -31,7 +32,7 @@ final class MediaGalleryStorer
             throw new RuntimeException('Cannot attach media to an unsaved model.');
         }
 
-        $conversion ??= (array) config('tbtop-image-gallery.conversion');
+        $conversion ??= (array) config('tbtop-spatie-media-library.conversion');
         $originalName = pathinfo((string) $file->getClientOriginalName(), PATHINFO_FILENAME);
 
         $converted = self::encode($file, $conversion, $originalName);
@@ -40,7 +41,13 @@ final class MediaGalleryStorer
 
         // addMedia() consumes (deletes) $path once copied to the media disk by
         // default, so the encoded temp file needs no separate cleanup here.
-        return $model->addMedia($path)->usingName($originalName)->usingFileName($fileName)->toMediaCollection($collection);
+        $media = $model->addMedia($path)->usingName($originalName)->usingFileName($fileName)->toMediaCollection($collection);
+
+        // Sniffed from the stored bytes, so a scriptful svg is stripped even
+        // when the conversion above left the original untouched.
+        SvgSanitizer::sanitizeStored($media->disk, $media->getPathRelativeToRoot(), $fileName);
+
+        return $media;
     }
 
     /**

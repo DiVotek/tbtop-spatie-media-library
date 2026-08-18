@@ -4,3 +4,8 @@
 composer.lock
 .DS_Store
 .phpunit.result.cache
+node_modules
+
+# client/dist is a build artifact: npm builds it from source via prepublishOnly
+# when publishing, so the checkout never needs to carry it.
+client/dist

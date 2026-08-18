@@ -13,12 +13,9 @@ return [
     // SVG-as-html XSS vector.
     'accept' => ['image/*'],
 
+    // Timeout and host allowlist live in tbtop-admin.media.url_import — one
+    // setting for every ingestion path.
     'url_import' => [
         'enabled' => true,
-        'timeout' => 30,
-
-        // Empty = any host the core SsrfGuard allows. Populate to restrict
-        // imports to known sources.
-        'allowed_hosts' => [],
     ],
 ];
