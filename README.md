@@ -19,38 +19,15 @@ The package is two halves in one repository: the PHP field (`src/`) and its Reac
 
 ## Install
 
-The package is private and ships from git — no registry on either side. Both halves are read from
-the same tag, so they cannot drift apart.
+Both halves publish from the same tag, so they cannot drift apart.
 
-Point composer at the repository and require the package:
-
-```json
-{
-  "repositories": [
-    { "type": "vcs", "url": "git@github.com:DiVotek/tbtop-spatie-media-library.git" }
-  ],
-  "require": {
-    "tbtop/spatie-media-library": "^0.1"
-  }
-}
+```bash
+composer require tbtop/spatie-media-library
 ```
 
-Add the client with the matching tag:
-
-```json
-{
-  "dependencies": {
-    "@tbtop/spatie-media-library": "github:DiVotek/tbtop-spatie-media-library#v0.1.0"
-  }
-}
+```bash
+npm install @tbtop/spatie-media-library
 ```
-
-Both resolve over your existing git credentials — an SSH key, `gh auth login`, or a credential
-helper — the same way composer's `auth.json` covers private VCS repositories. Nothing extra to
-configure.
-
-Upgrading means bumping the tag in the npm dependency and the constraint in composer. The npm side
-pins an exact tag: git dependencies have no version ranges.
 
 Register the client field once, wherever your admin entrypoint registers its other fields:
 
@@ -65,7 +42,7 @@ renders unstyled. Tailwind skips `node_modules` unless a source is declared expl
 
 ```css
 @import "tailwindcss";
-@source "../../node_modules/@tbtop/spatie-media-library/client/dist";
+@source "../../node_modules/@tbtop/spatie-media-library/dist";
 ```
 
 The path is relative to the stylesheet.
@@ -154,19 +131,17 @@ bun run typecheck
 bun run build      # writes client/dist
 ```
 
-`client/dist` is committed, because npm installs a git checkout as-is and never builds it. The
-release workflow rebuilds and commits it before tagging, so a release always ships a dist that
-matches its sources — but a branch can carry a stale one between releases.
+`client/dist` is a build artifact and is not committed: npm builds it from source through
+`prepublishOnly` when publishing, so the checkout never carries one.
 
-The manifests are split by role: the repository root holds the published npm manifest (version,
-entry points, peers), while `client/package.json` exists only to run the build.
+`client/package.json` is the published npm manifest and the single source of truth for the version.
+The PHP half has no version of its own — Packagist reads it from the git tag.
 
 ## Releasing
 
-Bump the version in the root `package.json` in your PR — merging it to `main` is the release. The
-workflow tags `vX.Y.Z` and creates a GitHub Release with notes generated from the merged pull
-requests. Composer reads that tag through the VCS repository; npm reads the same tag.
+Bump the version in `client/package.json` and merge that to `main`, then run the **Release** workflow
+from `main`. It publishes the client to npm, pushes the `vX.Y.Z` tag that Packagist turns into the
+PHP release, and creates a GitHub Release with notes generated from the merged pull requests.
 
-A merge that does not change the version is not a release, and the workflow exits quietly. Rebuild
-and commit `client/dist` alongside any change to `client/src`: CI fails a pull request whose dist is
-stale, and so does the release.
+npm is published before the tag is pushed, so a failed publish leaves no dangling tag and a re-run
+stays clean.

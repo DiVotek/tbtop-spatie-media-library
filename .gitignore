@@ -6,5 +6,6 @@ composer.lock
 .phpunit.result.cache
 node_modules
 
-# client/dist is committed on purpose: consumers install this package straight
-# from git, where npm reads the checkout as-is and never runs a build.
+# client/dist is a build artifact: npm builds it from source via prepublishOnly
+# when publishing, so the checkout never needs to carry it.
+client/dist

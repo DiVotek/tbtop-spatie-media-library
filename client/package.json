@@ -1,15 +1,43 @@
 {
-	"name": "@tbtop/spatie-media-library-build",
-	"version": "0.0.0",
-	"private": true,
-	"description": "Build workspace for the client half. The published manifest is the repository root package.json.",
+	"name": "@tbtop/spatie-media-library",
+	"version": "0.1.0",
+	"description": "Client half of tbtop/spatie-media-library: an image picker bound to a record's spatie media collection.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/DiVotek/tbtop-spatie-media-library.git",
+		"directory": "client"
+	},
+	"homepage": "https://github.com/DiVotek/tbtop-spatie-media-library#readme",
 	"type": "module",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
 		"build": "tsup",
+		"prepublishOnly": "bun run build",
 		"typecheck": "tsc --noEmit"
 	},
+	"peerDependencies": {
+		"@tbtop/inertia-admin": "^0.4.0",
+		"lucide-react": ">=0.400.0",
+		"react": "^19",
+		"react-dom": "^19"
+	},
 	"devDependencies": {
-		"@tbtop/inertia-admin": "file:../../tbtop/packages/client",
+		"@tbtop/inertia-admin": "^0.4.3",
 		"@types/react": "^19",
 		"lucide-react": "^0.544.0",
 		"react": "^19",
