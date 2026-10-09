@@ -112,8 +112,7 @@ final class MediaGalleryStorer
         if ($tempPath === false) {
             return null;
         }
-        // tempnam() creates the placeholder; rename keeps the unique name while
-        // giving spatie the extension it derives the mime from.
+        // Spatie derives the mime from the extension.
         $target = $tempPath.'.'.$encoded['ext'];
         rename($tempPath, $target);
         file_put_contents($target, $encoded['blob']);
