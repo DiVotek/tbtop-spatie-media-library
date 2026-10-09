@@ -6,11 +6,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use RuntimeException;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\DiskCannotBeAccessed;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\DiskDoesNotExist;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileCannotBeAdded;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileIsTooBig;
+use Spatie\MediaLibrary\MediaCollections\Exceptions\FileUnacceptableForCollection;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tbtop\Admin\Http\AuthorizesPage;
 use Tbtop\Admin\Http\ResolvedPage;
 use Tbtop\Admin\Media\MediaUploadLimit;
 use Tbtop\Admin\Media\MimePolicy;
+use Tbtop\Admin\Media\SvgSanitizeException;
 use Tbtop\Admin\Media\UrlFetcher;
 use Tbtop\Admin\Media\UrlFetchException;
 use Tbtop\SpatieMediaLibrary\Fields\MediaLibraryField;
@@ -28,6 +34,8 @@ use Tbtop\SpatieMediaLibrary\Support\MediaGalleryStorer;
 final class GalleryUploadController
 {
     use AuthorizesPage;
+
+    private const TOO_LARGE = 'The file is too large.';
 
     public function __invoke(Request $request): JsonResponse
     {
@@ -48,6 +56,12 @@ final class GalleryUploadController
 
         try {
             $media = MediaGalleryStorer::store($file, $target, $field->collection());
+        } catch (DiskCannotBeAccessed|DiskDoesNotExist $e) {
+            throw $e;
+        } catch (FileCannotBeAdded $e) {
+            return response()->json(['message' => self::refusalMessage($e)], 422);
+        } catch (SvgSanitizeException $e) {
+            return response()->json(['message' => __('tbtop-admin::admin.media.errors.'.$e->reason)], 422);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         } finally {
@@ -93,7 +107,10 @@ final class GalleryUploadController
             }
         }
 
-        $request->validate(['file' => 'required|file|max:'.MediaUploadLimit::kilobytes()]);
+        $request->validate(
+            ['file' => 'required|file|max:'.MediaUploadLimit::kilobytes()],
+            ['file.max' => self::TOO_LARGE],
+        );
 
         /** @var UploadedFile $file */
         $file = $request->file('file');
@@ -105,11 +122,21 @@ final class GalleryUploadController
         return [$file, false];
     }
 
+    /** Spatie's own messages carry server paths, so each refusal gets a fixed text. */
+    private static function refusalMessage(FileCannotBeAdded $e): string
+    {
+        return match (true) {
+            $e instanceof FileIsTooBig => self::TOO_LARGE,
+            $e instanceof FileUnacceptableForCollection => 'That file type is not allowed for this collection.',
+            default => 'This file cannot be added to this collection.',
+        };
+    }
+
     private static function importMessage(string $reason): string
     {
         return match ($reason) {
             UrlFetchException::BLOCKED_URL => 'This URL cannot be imported.',
-            UrlFetchException::FILE_TOO_LARGE => 'The file is too large.',
+            UrlFetchException::FILE_TOO_LARGE => self::TOO_LARGE,
             UrlFetchException::MIME_NOT_ALLOWED => 'That file type is not allowed.',
             default => 'Could not download that URL.',
         };

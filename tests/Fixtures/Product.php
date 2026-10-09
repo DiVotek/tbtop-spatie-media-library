@@ -12,4 +12,11 @@ final class Product extends Model implements HasMedia
     use InteractsWithMedia;
 
     protected $guarded = [];
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('single')->singleFile();
+        $this->addMediaCollection('pngonly')->acceptsMimeTypes(['image/png']);
+        $this->addMediaCollection('jpegonly')->acceptsMimeTypes(['image/jpeg']);
+    }
 }
