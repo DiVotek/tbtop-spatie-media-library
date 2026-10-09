@@ -17,8 +17,6 @@ use Tbtop\Admin\Uploads\ImageEncoder;
  */
 final class MediaGalleryStorer
 {
-    private const SCRATCH_DISK = 'tbtop-gallery-scratch';
-
     /**
      * @param  array{format: string, quality?: int}|null  $conversion  Per-field override; falls back to config.
      */
@@ -59,19 +57,19 @@ final class MediaGalleryStorer
 
     /**
      * sanitizeStored() works on a named disk, so the temp file's directory is
-     * mounted as a scratch disk for this one call and unmounted after, so a
-     * long-lived worker never keeps it.
+     * mounted as a scratch disk for this one call and unmounted after. The
+     * per-call name never shadows a host disk or another call's mount.
      */
     private static function sanitizeLocal(string $path, string $fileName): void
     {
-        config(['filesystems.disks.'.self::SCRATCH_DISK => ['driver' => 'local', 'root' => dirname($path)]]);
-        Storage::forgetDisk(self::SCRATCH_DISK);
+        $disk = 'tbtop-gallery-scratch-'.bin2hex(random_bytes(8));
+        config(['filesystems.disks.'.$disk => ['driver' => 'local', 'root' => dirname($path)]]);
 
         try {
-            SvgSanitizer::sanitizeStored(self::SCRATCH_DISK, basename($path), $fileName);
+            SvgSanitizer::sanitizeStored($disk, basename($path), $fileName);
         } finally {
-            Storage::forgetDisk(self::SCRATCH_DISK);
-            config(['filesystems.disks.'.self::SCRATCH_DISK => null]);
+            Storage::forgetDisk($disk);
+            config(['filesystems.disks.'.$disk => null]);
         }
     }
 

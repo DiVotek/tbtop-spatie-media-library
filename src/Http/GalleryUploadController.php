@@ -48,6 +48,10 @@ final class GalleryUploadController
             throw new NotFoundHttpException('This gallery field is not bound to a record.');
         }
 
+        if (! $target->exists) {
+            return response()->json(['message' => 'Save the record before uploading images.'], 422);
+        }
+
         try {
             [$file, $isTemp] = $this->readFile($request);
         } catch (RuntimeException $e) {
@@ -62,8 +66,6 @@ final class GalleryUploadController
             return response()->json(['message' => self::refusalMessage($e)], 422);
         } catch (SvgSanitizeException $e) {
             return response()->json(['message' => __('tbtop-admin::admin.media.errors.'.$e->reason)], 422);
-        } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
         } finally {
             if ($isTemp) {
                 @unlink($file->getPathname());
