@@ -1,4 +1,5 @@
 import { FileIcon, ImageOffIcon, PlusIcon, XIcon } from "lucide-react";
+import type { TileDrag } from "./sortableTiles";
 import type { GalleryOption } from "./types";
 
 // block on the button: an inline-level button adds a baseline gap under the
@@ -39,16 +40,19 @@ export function ImageTile({
 	onOpen,
 	onRemove,
 	disabled,
+	drag,
 }: {
 	item: GalleryOption;
 	onOpen: () => void;
 	onRemove: () => void;
 	disabled?: boolean;
+	drag?: TileDrag;
 }) {
 	return (
-		<div className="relative w-fit">
+		<div className="relative w-fit" ref={drag?.setNodeRef} style={drag?.style}>
 			<button
 				type="button"
+				{...drag?.buttonProps}
 				onClick={onOpen}
 				disabled={disabled}
 				title={`${item.label} — click to replace`}
@@ -80,18 +84,21 @@ export function PlaceholderTile({
 	onOpen,
 	onRemove,
 	disabled,
+	drag,
 }: {
 	id: string;
 	kind: "loading" | "missing" | "unresolved";
 	onOpen: () => void;
 	onRemove: () => void;
 	disabled?: boolean;
+	drag?: TileDrag;
 }) {
 	const label = kind === "missing" ? "Missing image" : `Image #${id}`;
 	return (
-		<div className="relative w-fit">
+		<div className="relative w-fit" ref={drag?.setNodeRef} style={drag?.style}>
 			<button
 				type="button"
+				{...drag?.buttonProps}
 				onClick={onOpen}
 				disabled={disabled}
 				title={`${label} — click to replace`}

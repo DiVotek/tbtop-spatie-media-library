@@ -6,6 +6,7 @@ import {
 	ModalShell,
 } from "@tbtop/inertia-admin";
 import { type KeyboardEvent as ReactKeyboardEvent, useCallback, useMemo, useState } from "react";
+import { SortableTile, SortableTiles, type TileDrag } from "./sortableTiles";
 import { AddTile, ImageTile, OptionPreview, PlaceholderTile } from "./tiles";
 import type { GalleryOption, GalleryOptions, GalleryPick, ModalTarget } from "./types";
 import { toIds, uniqueIds } from "./types";
@@ -115,22 +116,35 @@ export function GalleryForm({
 
 	const canAddMore = multiple || ids.length === 0;
 
+	const renderTile = (id: string, index: number, drag?: TileDrag) => {
+		const source = selected.sourceOf(id);
+		const props = {
+			disabled,
+			drag,
+			onOpen: () => openFor({ kind: "replace", index }),
+			onRemove: () => removeAt(index),
+		};
+		return typeof source === "string" ? (
+			<PlaceholderTile key={`${id}-${index}`} id={id} kind={source} {...props} />
+		) : (
+			<ImageTile key={`${id}-${index}`} item={source} {...props} />
+		);
+	};
+
 	return (
 		<div className="flex flex-col gap-2" data-testid={`gallery-picker-${name}`}>
 			<div className="flex flex-wrap gap-2">
-				{ids.map((id, index) => {
-					const source = selected.sourceOf(id);
-					const actions = {
-						disabled,
-						onOpen: () => openFor({ kind: "replace", index }),
-						onRemove: () => removeAt(index),
-					};
-					return typeof source === "string" ? (
-						<PlaceholderTile key={`${id}-${index}`} id={id} kind={source} {...actions} />
-					) : (
-						<ImageTile key={`${id}-${index}`} item={source} {...actions} />
-					);
-				})}
+				{multiple ? (
+					<SortableTiles ids={ids} onReorder={emit}>
+						{ids.map((id, index) => (
+							<SortableTile key={id} id={id} disabled={disabled === true}>
+								{(drag) => renderTile(id, index, drag)}
+							</SortableTile>
+						))}
+					</SortableTiles>
+				) : (
+					ids.map((id, index) => renderTile(id, index))
+				)}
 				{canAddMore && <AddTile onOpen={() => openFor({ kind: "set" })} disabled={disabled} />}
 			</div>
 

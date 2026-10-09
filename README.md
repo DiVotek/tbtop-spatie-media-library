@@ -87,6 +87,31 @@ client — nothing to declare, nothing to keep in sync.
 Without `->multiple()` the field holds a single media id; with it, a list. `MediaGalleryOptions::ids()`
 shapes a collection for the form's `record()`.
 
+### Order and removal on save
+
+With `->multiple()` the admin can drag tiles (or lift one with Space and move it with the arrow keys)
+to order the selection. The field only reorders its value; persist the order in the form's save
+handler so `getMedia()` follows it:
+
+```php
+->onSubmit(function (ActionCtx $ctx) use ($post): void {
+    if (! array_key_exists('banners', $ctx->form)) {
+        return; // field not submitted: leave the collection alone
+    }
+    $ids = array_map('strval', (array) $ctx->form['banners']);
+
+    MediaGalleryOptions::saveOrder($post, 'banners', $ids);
+    // Optional, irreversible: delete media the admin removed from the field.
+    MediaGalleryOptions::pruneUnselected($post, 'banners', $ids);
+})
+```
+
+`saveOrder()` puts the given ids first and keeps the collection's other media after them; it deletes
+nothing. Removing a tile only edits the value — without `pruneUnselected()` the media stays in the
+collection, and with the `record()` above it comes back on reload. `pruneUnselected()` deletes rows
+and files, and an empty list empties the collection: a cleared field (`null`) becomes `[]` on
+purpose, while a missing key returns early so a request without the field deletes nothing.
+
 The record must be persisted. Spatie derives the storage path from the model key, so attaching to an
 unsaved model is refused with a 422 rather than writing a row whose path cannot be built.
 
