@@ -1,6 +1,6 @@
 import { useClient } from "@tbtop/inertia-admin";
 import { useCallback, useEffect, useState } from "react";
-import { type GalleryOption, readOptions } from "./types";
+import { type GalleryOption, readErrorMessage, readOptions } from "./types";
 
 const DEBOUNCE_MS = 200;
 
@@ -34,7 +34,7 @@ export function useGalleryRows(endpoint: string, search: string, active: boolean
 				})
 				.catch((e: unknown) => {
 					if (!alive) return;
-					setError(e instanceof Error ? e.message : "Failed to load images");
+					setError(readErrorMessage(e, "Failed to load images"));
 				})
 				.finally(() => {
 					if (alive) setLoading(false);

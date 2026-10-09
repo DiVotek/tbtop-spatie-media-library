@@ -1,4 +1,4 @@
-import { FileIcon, PlusIcon, XIcon } from "lucide-react";
+import { FileIcon, ImageOffIcon, PlusIcon, XIcon } from "lucide-react";
 import type { GalleryOption } from "./types";
 
 // block on the button: an inline-level button adds a baseline gap under the
@@ -61,6 +61,57 @@ export function ImageTile({
 					type="button"
 					onClick={onRemove}
 					aria-label={`Remove ${item.label}`}
+					className="absolute right-0.5 top-0.5 rounded-full bg-background/85 p-0.5 text-foreground shadow-sm hover:bg-background"
+				>
+					<XIcon className="h-3.5 w-3.5" />
+				</button>
+			)}
+		</div>
+	);
+}
+
+/**
+ * A selected id without a preview. It keeps its position and both actions, so
+ * the value can still be edited when the image is gone or did not load.
+ */
+export function PlaceholderTile({
+	id,
+	kind,
+	onOpen,
+	onRemove,
+	disabled,
+}: {
+	id: string;
+	kind: "loading" | "missing" | "unresolved";
+	onOpen: () => void;
+	onRemove: () => void;
+	disabled?: boolean;
+}) {
+	const label = kind === "missing" ? "Missing image" : `Image #${id}`;
+	return (
+		<div className="relative w-fit">
+			<button
+				type="button"
+				onClick={onOpen}
+				disabled={disabled}
+				title={`${label} — click to replace`}
+				aria-busy={kind === "loading"}
+				className={`${TILE} flex flex-col items-center justify-center gap-1 bg-muted text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 ${
+					kind === "loading" ? "animate-pulse" : ""
+				}`}
+			>
+				{kind === "missing" && (
+					<>
+						<ImageOffIcon className="h-6 w-6" />
+						<span className="text-[10px] font-medium">{label}</span>
+					</>
+				)}
+			</button>
+			{!disabled && (
+				<button
+					type="button"
+					onClick={onRemove}
+					aria-label={`Remove ${label}`}
 					className="absolute right-0.5 top-0.5 rounded-full bg-background/85 p-0.5 text-foreground shadow-sm hover:bg-background"
 				>
 					<XIcon className="h-3.5 w-3.5" />

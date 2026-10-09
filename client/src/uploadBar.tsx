@@ -1,12 +1,7 @@
 import { Button, Input, useClient } from "@tbtop/inertia-admin";
 import { UploadIcon } from "lucide-react";
 import { useRef, useState } from "react";
-import { type GalleryOption, readUploadedOption } from "./types";
-
-function errorMessage(e: unknown, fallback: string): string {
-	if (e instanceof Error && e.message !== "") return e.message;
-	return fallback;
-}
+import { type GalleryOption, readErrorMessage, readUploadedOption } from "./types";
 
 /** Upload controls in the modal header: a file picker and a URL import. */
 export function UploadBar({
@@ -40,7 +35,7 @@ export function UploadBar({
 				setUrl("");
 				onUploaded(option);
 			})
-			.catch((e: unknown) => setError(errorMessage(e, fallback)))
+			.catch((e: unknown) => setError(readErrorMessage(e, fallback)))
 			.finally(() => onBusyChange(false));
 	};
 
