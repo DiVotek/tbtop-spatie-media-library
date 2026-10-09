@@ -39,11 +39,9 @@ export function GalleryForm({
 	const open = target !== null;
 
 	const { rows, loading, error, refetch } = useGalleryRows(endpoint, search, open);
-	// Tiles resolve by id, not from the browse rows: those stop at per_page.
 	const selected = useSelectedOptions(endpoint, ids);
 
-	// Uploads from this dialog session stay on top: the refetch that follows an
-	// upload returns the first per_page rows, which a new image is not among.
+	// Pinned: the post-upload refetch returns the first per_page rows, without the new image.
 	const visibleRows = useMemo(() => {
 		const needle = search.toLowerCase();
 		const pinned = uploaded.filter((o) => o.label.toLowerCase().includes(needle));
@@ -64,7 +62,6 @@ export function GalleryForm({
 		[ids],
 	);
 
-	// Duplicates would let one image occupy two tiles; the first position wins.
 	const emit = (picked: string[]) => {
 		const next = uniqueIds(picked);
 		if (next.length === 0) {
