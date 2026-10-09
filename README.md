@@ -95,7 +95,10 @@ handler so `getMedia()` follows it:
 
 ```php
 ->onSubmit(function (ActionCtx $ctx) use ($post): void {
-    $ids = array_map('strval', (array) ($ctx->form['banners'] ?? []));
+    if (! array_key_exists('banners', $ctx->form)) {
+        return; // field not submitted: leave the collection alone
+    }
+    $ids = array_map('strval', (array) $ctx->form['banners']);
 
     MediaGalleryOptions::saveOrder($post, 'banners', $ids);
     // Optional, irreversible: delete media the admin removed from the field.
@@ -106,8 +109,8 @@ handler so `getMedia()` follows it:
 `saveOrder()` puts the given ids first and keeps the collection's other media after them; it deletes
 nothing. Removing a tile only edits the value — without `pruneUnselected()` the media stays in the
 collection, and with the `record()` above it comes back on reload. `pruneUnselected()` deletes rows
-and files, and an empty list empties the collection, which is why the field's `null` is turned into
-`[]` deliberately above.
+and files, and an empty list empties the collection: a cleared field (`null`) becomes `[]` on
+purpose, while a missing key returns early so a request without the field deletes nothing.
 
 The record must be persisted. Spatie derives the storage path from the model key, so attaching to an
 unsaved model is refused with a 422 rather than writing a row whose path cannot be built.
