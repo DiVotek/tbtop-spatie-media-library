@@ -59,15 +59,20 @@ final class MediaGalleryStorer
 
     /**
      * sanitizeStored() works on a named disk, so the temp file's directory is
-     * mounted as a scratch disk; forgetDisk() drops the root cached by the
-     * previous call.
+     * mounted as a scratch disk for this one call and unmounted after, so a
+     * long-lived worker never keeps it.
      */
     private static function sanitizeLocal(string $path, string $fileName): void
     {
         config(['filesystems.disks.'.self::SCRATCH_DISK => ['driver' => 'local', 'root' => dirname($path)]]);
         Storage::forgetDisk(self::SCRATCH_DISK);
 
-        SvgSanitizer::sanitizeStored(self::SCRATCH_DISK, basename($path), $fileName);
+        try {
+            SvgSanitizer::sanitizeStored(self::SCRATCH_DISK, basename($path), $fileName);
+        } finally {
+            Storage::forgetDisk(self::SCRATCH_DISK);
+            config(['filesystems.disks.'.self::SCRATCH_DISK => null]);
+        }
     }
 
     /** @return list<string> empty when the collection accepts any mime */
@@ -114,8 +119,13 @@ final class MediaGalleryStorer
         }
         // Spatie derives the mime from the extension.
         $target = $tempPath.'.'.$encoded['ext'];
-        rename($tempPath, $target);
-        file_put_contents($target, $encoded['blob']);
+        // A failed write must not reach addMedia() as an empty image: keep the original instead.
+        if (! rename($tempPath, $target) || file_put_contents($target, $encoded['blob']) === false) {
+            @unlink($tempPath);
+            @unlink($target);
+
+            return null;
+        }
 
         return [$target, "{$originalName}.{$encoded['ext']}"];
     }
