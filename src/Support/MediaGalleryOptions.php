@@ -89,6 +89,7 @@ final class MediaGalleryOptions
      */
     public static function pruneUnselected(Model&HasMedia $model, string $collection, array $ids): void
     {
+        $ids = array_map('strval', $ids);
         foreach (self::fresh($model, $collection) as $media) {
             if (! in_array((string) $media->getKey(), $ids, true)) {
                 $media->delete();
