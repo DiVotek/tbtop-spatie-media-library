@@ -48,3 +48,35 @@ export function toIds(value: GalleryValue): string[] {
 	if (value === null) return [];
 	return Array.isArray(value) ? value.map(String) : [String(value)];
 }
+
+/**
+ * Answer to a `values` request, keyed by id. Core falls back to
+ * `{value, label: id}` without `display` for an id its resolver did not find,
+ * so a row without imagery means the media is gone.
+ */
+export function readResolved(payload: unknown): Map<string, GalleryOption | "missing"> {
+	const resolved = new Map<string, GalleryOption | "missing">();
+	if (typeof payload !== "object" || payload === null || !("options" in payload)) return resolved;
+	const rows = payload.options;
+	if (!Array.isArray(rows)) return resolved;
+	for (const row of rows) {
+		if (typeof row !== "object" || row === null || !("value" in row)) continue;
+		if (typeof row.value !== "string") continue;
+		resolved.set(row.value, isOption(row) ? row : "missing");
+	}
+	return resolved;
+}
+
+/** Core's client rejects with a plain `{code, message, status}` object, not an Error. */
+export function readErrorMessage(e: unknown, fallback: string): string {
+	if (typeof e === "object" && e !== null && "message" in e) {
+		const message = e.message;
+		if (typeof message === "string" && message !== "") return message;
+	}
+	return fallback;
+}
+
+/** Order-preserving; the first occurrence wins. */
+export function uniqueIds(ids: string[]): string[] {
+	return [...new Set(ids)];
+}

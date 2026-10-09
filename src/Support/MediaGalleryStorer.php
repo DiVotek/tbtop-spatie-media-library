@@ -4,6 +4,7 @@ namespace Tbtop\SpatieMediaLibrary\Support;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
@@ -35,30 +36,59 @@ final class MediaGalleryStorer
         $conversion ??= (array) config('tbtop-spatie-media-library.conversion');
         $originalName = pathinfo((string) $file->getClientOriginalName(), PATHINFO_FILENAME);
 
-        $converted = self::encode($file, $conversion, $originalName);
+        $converted = self::encode($file, $conversion, $originalName, self::acceptedMimes($model, $collection));
         $path = $converted[0] ?? (string) $file->getRealPath();
         $fileName = $converted[1] ?? (string) $file->getClientOriginalName();
 
-        // addMedia() consumes (deletes) $path once copied to the media disk by
-        // default, so the encoded temp file needs no separate cleanup here.
-        $media = $model->addMedia($path)->usingName($originalName)->usingFileName($fileName)->toMediaCollection($collection);
+        try {
+            // Before addMedia(): spatie writes the row and, for singleFile() /
+            // onlyKeepLatest() collections, prunes older media inside that call,
+            // so rejecting afterwards would leave an orphan row and a lost image.
+            self::sanitizeLocal($path, $fileName);
 
-        // Sniffed from the stored bytes, so a scriptful svg is stripped even
-        // when the conversion above left the original untouched.
-        SvgSanitizer::sanitizeStored($media->disk, $media->getPathRelativeToRoot(), $fileName);
-
-        return $media;
+            // addMedia() consumes (deletes) $path only after a successful copy.
+            return $model->addMedia($path)->usingName($originalName)->usingFileName($fileName)->toMediaCollection($collection);
+        } finally {
+            if ($converted !== null && is_file($converted[0])) {
+                @unlink($converted[0]);
+            }
+        }
     }
 
     /**
-     * Encodes to the configured format when GD supports it; returns null when
-     * the original upload should be kept untouched instead (unsupported
-     * format, or GD could not decode the file).
+     * sanitizeStored() works on a named disk, so the temp file's directory is
+     * mounted as a scratch disk for this one call and unmounted after. The
+     * per-call name never shadows a host disk or another call's mount.
+     */
+    private static function sanitizeLocal(string $path, string $fileName): void
+    {
+        $disk = 'tbtop-gallery-scratch-'.bin2hex(random_bytes(8));
+        config(['filesystems.disks.'.$disk => ['driver' => 'local', 'root' => dirname($path)]]);
+
+        try {
+            SvgSanitizer::sanitizeStored($disk, basename($path), $fileName);
+        } finally {
+            Storage::forgetDisk($disk);
+            config(['filesystems.disks.'.$disk => null]);
+        }
+    }
+
+    /** @return list<string> empty when the collection accepts any mime */
+    private static function acceptedMimes(Model&HasMedia $model, string $collection): array
+    {
+        return array_values($model->getMediaCollection($collection)->acceptsMimeTypes ?? []);
+    }
+
+    /**
+     * Encodes to the configured format when GD supports it and the collection
+     * would accept the result; returns null when the original upload should be
+     * kept untouched instead.
      *
      * @param  array{format?: string, quality?: int}  $conversion
+     * @param  list<string>  $acceptedMimes
      * @return array{0: string, 1: string}|null
      */
-    private static function encode(UploadedFile $file, array $conversion, string $originalName): ?array
+    private static function encode(UploadedFile $file, array $conversion, string $originalName, array $acceptedMimes): ?array
     {
         $format = $conversion['format'] ?? null;
         if (! is_string($format) || ! ImageEncoder::supports($format)) {
@@ -77,9 +107,24 @@ final class MediaGalleryStorer
             return null;
         }
 
-        $tempPath = tempnam(sys_get_temp_dir(), 'gallery-').'.'.$encoded['ext'];
-        file_put_contents($tempPath, $encoded['blob']);
+        if ($acceptedMimes !== [] && ! in_array($encoded['mimeType'], $acceptedMimes, true)) {
+            return null;
+        }
 
-        return [$tempPath, "{$originalName}.{$encoded['ext']}"];
+        $tempPath = tempnam(sys_get_temp_dir(), 'gallery-');
+        if ($tempPath === false) {
+            return null;
+        }
+        // Spatie derives the mime from the extension.
+        $target = $tempPath.'.'.$encoded['ext'];
+        // A failed write must not reach addMedia() as an empty image: keep the original instead.
+        if (! rename($tempPath, $target) || file_put_contents($target, $encoded['blob']) === false) {
+            @unlink($tempPath);
+            @unlink($target);
+
+            return null;
+        }
+
+        return [$target, "{$originalName}.{$encoded['ext']}"];
     }
 }

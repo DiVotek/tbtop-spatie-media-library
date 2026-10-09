@@ -33,9 +33,12 @@ final class MediaLibraryField extends Select
         $this->target = $model;
         $this->collection = $collection;
 
-        return $this->query(
-            fn (array $deps, string $search): array => MediaGalleryOptions::search($model, $collection, $search),
-        );
+        return $this
+            ->query(fn (array $deps, string $search): array => MediaGalleryOptions::search($model, $collection, $search))
+            // Selected ids past the per_page cap still need previews. Looked up
+            // inside this record's collection only, so the values payload cannot
+            // probe media that belongs to anything else.
+            ->resolveUsing(fn (string $id): ?array => MediaGalleryOptions::find($model, $collection, $id));
     }
 
     /**

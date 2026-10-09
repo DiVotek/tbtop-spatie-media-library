@@ -7,24 +7,24 @@ use Tbtop\Admin\Panels\PanelRegistry;
 use Tbtop\SpatieMediaLibrary\Http\GalleryUploadController;
 
 /**
- * Mirrors core's per-page endpoint registration: one upload route per page,
- * inside that panel's middleware stack, with tbtopPage baked into the route
- * defaults so the controller re-resolves the page — and therefore the bound
- * record — without trusting anything in the request.
+ * Mirrors core's per-page endpoint registration (tbtop/admin routes/admin.php):
+ * one upload route per page, under the page's own middleware() override or the
+ * panel's auth stack, with tbtopPage baked into the route defaults so the
+ * controller re-resolves the page — and therefore the bound record — without
+ * trusting anything in the request. Core exposes no hook for plugin endpoints,
+ * so this copy of its stack rule must follow core if that rule changes.
  */
 foreach (PanelRegistry::fromConfig()->all() as $panel) {
-    Route::middleware([
-        SetCurrentPanel::class.':'.$panel->getId(),
-        ...$panel->authStack(),
-        SetAdminLocale::class,
-    ])
-        ->prefix($panel->getPrefix())
-        ->name('tbtop.'.$panel->getId().'.gallery.')
-        ->group(function () use ($panel): void {
-            foreach ($panel->getPages() as $class) {
-                Route::post($class::path().'/gallery-upload/{tbtopField}', GalleryUploadController::class)
-                    ->defaults('tbtopPage', $class)
-                    ->name($class::slug().'.upload');
-            }
-        });
+    foreach ($panel->getPages() as $class) {
+        Route::middleware([
+            SetCurrentPanel::class.':'.$panel->getId(),
+            ...($class::middleware($panel) ?? $panel->authStack()),
+            SetAdminLocale::class,
+        ])
+            ->prefix($panel->getPrefix())
+            ->name('tbtop.'.$panel->getId().'.gallery.')
+            ->post($class::path().'/gallery-upload/{tbtopField}', GalleryUploadController::class)
+            ->defaults('tbtopPage', $class)
+            ->name($class::slug().'.upload');
+    }
 }

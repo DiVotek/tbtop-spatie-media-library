@@ -26,6 +26,14 @@ final class MediaGalleryOptions
             ->all();
     }
 
+    /** @return array{value: string, label: string, display: array{image: string, subtitle: string, mime: string}}|null */
+    public static function find(Model&HasMedia $model, string $collection, string $id): ?array
+    {
+        $media = $model->getMedia($collection)->first(fn (Media $media): bool => (string) $media->getKey() === $id);
+
+        return $media === null ? null : self::toOption($media);
+    }
+
     /**
      * `display` is core's allowlisted channel for option imagery — arbitrary
      * row keys are stripped, since a query() row is often a whole model.

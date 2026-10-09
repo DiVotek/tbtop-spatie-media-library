@@ -94,7 +94,17 @@ unsaved model is refused with a 422 rather than writing a row whose path cannot 
 
 The field posts to `{page-path}/gallery-upload/{field}`, registered per panel page. The target record
 and collection are read off the field on the re-resolved page and never from the request, so a caller
-cannot redirect an upload into another model. The page's own gate applies.
+cannot redirect an upload into another model. The upload runs under the same middleware as the
+page's other endpoints — the page's `middleware()` override when it has one, the panel's auth stack
+otherwise — and the page's own gate applies on top.
+
+**Uploads write immediately.** The file is attached to the record when it is uploaded, not when the
+form is saved. For a collection with `singleFile()` or `onlyKeepLatest()`, spatie deletes the older
+media at that moment, so cancelling the dialog or the form does not bring it back.
+
+When a collection declares `acceptsMimeTypes()` and the configured conversion would produce a type
+it refuses, the original file is stored unconverted. Files the collection refuses get a 422 with a
+short reason; spatie's own message is never returned, since it can carry server paths.
 
 URL import reuses core's guards: private ranges and non-http schemes are blocked with DNS pinning
 against rebinding, redirects are refused, the transfer aborts when it exceeds the size ceiling, and
