@@ -57,6 +57,59 @@ final class MediaGalleryOptions
     }
 
     /**
+     * Persists a gallery's order for the consumer's save handler, so getMedia()
+     * follows it: the given ids first, the collection's other media after them
+     * in their previous order. Ids outside this record's collection are ignored.
+     *
+     * @param  list<string>  $ids
+     */
+    public static function saveOrder(Model&HasMedia $model, string $collection, array $ids): void
+    {
+        if ($ids === []) {
+            return;
+        }
+
+        $existing = array_map(fn (Media $media): string => (string) $media->getKey(), self::fresh($model, $collection));
+        $selected = array_values(array_intersect(array_unique($ids), $existing));
+        $rest = array_values(array_diff($existing, $selected));
+
+        // setNewOrder() renumbers only what it is given; passing the rest too
+        // keeps unselected media from interleaving with the new numbers.
+        /** @var class-string<Media> $mediaClass */
+        $mediaClass = config('media-library.media_model');
+        $mediaClass::setNewOrder([...$selected, ...$rest]);
+    }
+
+    /**
+     * Deletes the collection's media whose id is not in $ids — rows and files.
+     * Irreversible, and an empty list empties the collection: the consumer
+     * normalises the field's null to [] only when that is what "cleared" means.
+     *
+     * @param  list<string>  $ids
+     */
+    public static function pruneUnselected(Model&HasMedia $model, string $collection, array $ids): void
+    {
+        foreach (self::fresh($model, $collection) as $media) {
+            if (! in_array((string) $media->getKey(), $ids, true)) {
+                $media->delete();
+            }
+        }
+    }
+
+    /**
+     * Queried rather than read off the loaded relation, which goes stale
+     * between an upload and the form save.
+     *
+     * @return list<Media>
+     */
+    private static function fresh(Model&HasMedia $model, string $collection): array
+    {
+        $rows = $model->media()->where('collection_name', $collection)->orderBy('order_column')->get()->all();
+
+        return array_values(array_filter($rows, fn (mixed $row): bool => $row instanceof Media));
+    }
+
+    /**
      * Current ids in a collection, shaped for a form record().
      *
      * @return list<string>
